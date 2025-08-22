@@ -1,0 +1,45 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# dotenv environment variables
+.env
+.env.*
+
+# Logs
+logs
+*.log
+logs/**/*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build output
+dist/
+build/
+tmp/
+temp/
+
+# Coverage
+coverage/
+
+# Misc
+.vscode/
+.idea/
+.parcel-cache/
+.next/
+.cache/
+.eslintcache
+
+# Express specific (if you use uploads or temp files)
+uploads/
+public/uploads/
+public/temp/
+
+
+# Custom files
+generate-jwt-secret.js
