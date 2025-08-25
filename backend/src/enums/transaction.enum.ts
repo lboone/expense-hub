@@ -25,3 +25,8 @@ export enum PaymentMethodEnum {
   CASH = "CASH",
   OTHER = "OTHER",
 }
+
+export enum TransactionRecurringStatusEnum {
+  RECURRING = "RECURRING",
+  NON_RECURRING = "NON_RECURRING",
+}
