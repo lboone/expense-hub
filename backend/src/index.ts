@@ -8,6 +8,7 @@ import Env from "./config/env.config";
 import HTTPSTATUS from "./config/http.config";
 import { asyncHandler } from "./middlewares/asyncHandler.middleware";
 import errorHandler from "./middlewares/errorHandler.middleware";
+import authRoutes from "./routes/auth.route";
 
 const app = express();
 const BASE_PATH = Env.BASE_PATH;
@@ -28,6 +29,8 @@ app.get(
     res.status(HTTPSTATUS.OK).json({ message: "Expense Hub API is running" });
   })
 );
+
+app.use(`${BASE_PATH}/auth`, authRoutes);
 
 app.use(errorHandler);
 
