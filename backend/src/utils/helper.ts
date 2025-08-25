@@ -1,6 +1,8 @@
 import {
+  addDays,
   addMonths,
   addQuarters,
+  addWeeks,
   addYears,
   startOfMonth,
   startOfQuarter,
@@ -8,6 +10,7 @@ import {
   startOfYear,
 } from "date-fns";
 import { ReportFrequencyEnum } from "../enums/report.enum";
+import { RecurringIntervalEnum } from "../enums/transaction.enum";
 
 interface IReportDateCalculator {
   frequency: keyof typeof ReportFrequencyEnum;
@@ -43,3 +46,31 @@ export const calculateNextReportDate = ({
   nextDate.setHours(0, 0, 0, 0);
   return nextDate;
 };
+
+export function calculateNextOccurrence(
+  date: Date,
+  recurringInterval: keyof typeof RecurringIntervalEnum
+) {
+  const base = new Date(date);
+  base.setHours(0, 0, 0, 0);
+
+  switch (recurringInterval) {
+    case RecurringIntervalEnum.DAILY:
+      return addDays(base, 1);
+      break;
+    case RecurringIntervalEnum.WEEKLY:
+      return addWeeks(base, 1);
+      break;
+    case RecurringIntervalEnum.BI_WEEKLY:
+      return addWeeks(base, 2);
+      break;
+    case RecurringIntervalEnum.MONTHLY:
+      return addMonths(base, 1);
+      break;
+    case RecurringIntervalEnum.YEARLY:
+      return addYears(base, 1);
+      break;
+    default:
+      return base;
+  }
+}
