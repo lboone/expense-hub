@@ -9,6 +9,7 @@ import HTTPSTATUS from "../config/http.config";
 import { asyncHandler } from "../middlewares/asyncHandler.middleware";
 import {
   createTransactionService,
+  duplicateTransactionService,
   getAllTransactionService,
   getTransactionByIdService,
 } from "../services/transaction.service";
@@ -75,6 +76,27 @@ export const getTransactionByIdController = asyncHandler(
 
     return res.status(HTTPSTATUS.OK).json({
       message: "Transaction retrieved successfully",
+      data: { transaction },
+    });
+  }
+);
+
+export const duplicateTransactionController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const userId = req.user?._id;
+    const transactionId = transactionIdSchema.parse(req.params.id);
+    const transaction = await duplicateTransactionService(
+      userId,
+      transactionId
+    );
+    if (!transaction) {
+      return res.status(HTTPSTATUS.NOT_FOUND).json({
+        message: "Transaction not found",
+      });
+    }
+
+    return res.status(HTTPSTATUS.OK).json({
+      message: "Transaction duplicated successfully",
       data: { transaction },
     });
   }
