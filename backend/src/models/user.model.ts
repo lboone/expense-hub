@@ -1,16 +1,6 @@
-import { Document, model, Schema } from "mongoose";
+import { model, Schema } from "mongoose";
+import type { UserDocument } from "../@types/user.type";
 import { comparePassword, hashPassword } from "../utils/bcrypt";
-
-export interface UserDocument extends Document {
-  name: string;
-  email: string;
-  password: string;
-  profilePicture: string | null;
-  createdAt: Date;
-  updatedAt: Date;
-  comparePassword: (password: string) => Promise<boolean>;
-  omitPassword: () => Omit<UserDocument, "password">;
-}
 
 const userSchema = new Schema<UserDocument>(
   {
