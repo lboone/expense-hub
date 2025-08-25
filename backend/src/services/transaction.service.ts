@@ -3,6 +3,7 @@ import type {
   TransactionPagination,
 } from "../@types/transaction.type";
 import TransactionModel from "../models/transaction.model";
+import { NotFoundException } from "../utils/app-error";
 import { calculateNextOccurrence } from "../utils/helper";
 import type { CreateTransactionType } from "../validators/transaction.validator";
 
@@ -86,4 +87,16 @@ export const getAllTransactionService = async (
       skip,
     },
   };
+};
+
+export const getTransactionByIdService = async (
+  userId: string,
+  transactionId: string | undefined
+) => {
+  const transaction = await TransactionModel.findOne({
+    _id: transactionId,
+    userId,
+  });
+  if (!transaction) throw new NotFoundException("Transaction not found");
+  return transaction;
 };

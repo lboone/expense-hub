@@ -9,6 +9,6 @@ export const getCurrentUserController = asyncHandler(
     const user = await findByIdUserService(userId);
     return res
       .status(HTTPSTATUS.OK)
-      .json({ message: "User fetched successfully", data: user });
+      .json({ message: "User fetched successfully", data: { user } });
   }
 );

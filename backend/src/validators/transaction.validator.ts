@@ -5,6 +5,11 @@ import {
   TransactionTypeEnum,
 } from "../enums/transaction.enum";
 
+export const transactionIdSchema = z
+  .string()
+  .trim()
+  .min(1, "Transaction ID is required");
+
 export const baseTransactionSchema = z.object({
   title: z.string().min(1, "Title is required"),
   type: z.enum([TransactionTypeEnum.INCOME, TransactionTypeEnum.EXPENSE], {

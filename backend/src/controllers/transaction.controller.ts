@@ -10,8 +10,12 @@ import { asyncHandler } from "../middlewares/asyncHandler.middleware";
 import {
   createTransactionService,
   getAllTransactionService,
+  getTransactionByIdService,
 } from "../services/transaction.service";
-import { createTransactionSchema } from "../validators/transaction.validator";
+import {
+  createTransactionSchema,
+  transactionIdSchema,
+} from "../validators/transaction.validator";
 
 export const createTransactionController = asyncHandler(
   async (req: Request, res: Response) => {
@@ -21,7 +25,7 @@ export const createTransactionController = asyncHandler(
     const transaction = await createTransactionService(body, userId);
     return res.status(HTTPSTATUS.CREATED).json({
       message: "Transaction created successfully",
-      data: transaction,
+      data: { transaction },
     });
   }
 );
@@ -43,9 +47,35 @@ export const getAllTransactionController = asyncHandler(
       filters,
       pagination
     );
+
+    if (!transactions.transactions.length) {
+      return res.status(HTTPSTATUS.NOT_FOUND).json({
+        message: "No transactions found",
+      });
+    }
     return res.status(HTTPSTATUS.OK).json({
       message: "Transactions retrieved successfully",
       data: transactions,
+    });
+  }
+);
+
+export const getTransactionByIdController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const userId = req.user?._id;
+    const transactionId = transactionIdSchema.parse(req.params.id);
+
+    const transaction = await getTransactionByIdService(userId, transactionId);
+
+    if (!transaction) {
+      return res.status(HTTPSTATUS.NOT_FOUND).json({
+        message: "Transaction not found",
+      });
+    }
+
+    return res.status(HTTPSTATUS.OK).json({
+      message: "Transaction retrieved successfully",
+      data: { transaction },
     });
   }
 );
