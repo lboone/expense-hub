@@ -55,6 +55,24 @@ export const bulkDeleteTransactionSchema = z.object({
     .array(z.string().length(24, "Invalid transaction ID format"))
     .min(1, "At least one transaction ID is required"),
 });
+
+export const bulkTransactionSchema = z.object({
+  transactions: z
+    .array(baseTransactionSchema)
+    .min(1, "At least one transaction is required")
+    .max(300, "At most 300 transactions are allowed")
+    .refine(
+      (txs) =>
+        txs.every((tx) => {
+          const amount = Number(tx.amount);
+          return !isNaN(amount) && amount > 0 && amount < 1000000;
+        }),
+      {
+        message:
+          "Each transaction amount must be a positive number less than $1,000,000",
+      }
+    ),
+});
 export const createTransactionSchema = baseTransactionSchema;
 export const updateTransactionSchema = baseTransactionSchema.partial();
 

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import {
   bulkDeleteTransactionController,
+  bulkTransactionController,
   createTransactionController,
   deleteTransactionController,
   duplicateTransactionController,
@@ -13,6 +14,7 @@ const transactionRoutes = Router();
 
 // Specific routes FIRST (before parameterized routes)
 transactionRoutes.delete("/bulk-delete", bulkDeleteTransactionController); // Bulk delete transactions
+transactionRoutes.post("/bulk-transaction", bulkTransactionController); // Bulk transaction
 
 // RESTful routes
 transactionRoutes.post("/", createTransactionController); // Create transaction

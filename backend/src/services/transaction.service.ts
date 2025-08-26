@@ -205,3 +205,36 @@ export const bulkDeleteTransactionService = async (
     deletedCount: result.deletedCount,
   };
 };
+
+export const bulkTransactionService = async (
+  userId: string,
+  transactions: CreateTransactionType[]
+) => {
+  try {
+    const bulkOps = transactions.map((tx) => ({
+      insertOne: {
+        document: {
+          ...tx,
+          userId,
+          isRecurring: false,
+          nextRecurringDate: null,
+          recurringInterval: null,
+          lastProcessed: null,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        },
+      },
+    }));
+
+    const results = await TransactionModel.bulkWrite(bulkOps, {
+      ordered: true,
+    });
+
+    return {
+      success: true,
+      insertedCount: results.insertedCount,
+    };
+  } catch (error) {
+    throw error;
+  }
+};

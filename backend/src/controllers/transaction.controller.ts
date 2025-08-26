@@ -9,6 +9,7 @@ import HTTPSTATUS from "../config/http.config";
 import { asyncHandler } from "../middlewares/asyncHandler.middleware";
 import {
   bulkDeleteTransactionService,
+  bulkTransactionService,
   createTransactionService,
   deleteTransactionService,
   duplicateTransactionService,
@@ -18,6 +19,7 @@ import {
 } from "../services/transaction.service";
 import {
   bulkDeleteTransactionSchema,
+  bulkTransactionSchema,
   createTransactionSchema,
   transactionIdSchema,
   updateTransactionSchema,
@@ -174,6 +176,20 @@ export const bulkDeleteTransactionController = asyncHandler(
     return res.status(HTTPSTATUS.OK).json({
       message: "Transactions deleted successfully",
       data: { deletedCount: transactionsDeleted.deletedCount },
+    });
+  }
+);
+
+export const bulkTransactionController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const userId = req.user?._id;
+    const { transactions } = bulkTransactionSchema.parse(req.body);
+
+    const results = await bulkTransactionService(userId, transactions);
+
+    return res.status(HTTPSTATUS.OK).json({
+      message: "Bulk transaction inserted successful",
+      data: { ...results },
     });
   }
 );
