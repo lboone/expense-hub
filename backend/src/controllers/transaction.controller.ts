@@ -9,13 +9,16 @@ import HTTPSTATUS from "../config/http.config";
 import { asyncHandler } from "../middlewares/asyncHandler.middleware";
 import {
   createTransactionService,
+  deleteTransactionService,
   duplicateTransactionService,
   getAllTransactionService,
   getTransactionByIdService,
+  updateTransactionService,
 } from "../services/transaction.service";
 import {
   createTransactionSchema,
   transactionIdSchema,
+  updateTransactionSchema,
 } from "../validators/transaction.validator";
 
 export const createTransactionController = asyncHandler(
@@ -98,6 +101,54 @@ export const duplicateTransactionController = asyncHandler(
     return res.status(HTTPSTATUS.OK).json({
       message: "Transaction duplicated successfully",
       data: { transaction },
+    });
+  }
+);
+
+export const updateTransactionController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const userId = req.user?._id;
+    const transactionId = transactionIdSchema.parse(req.params.id);
+    const body = updateTransactionSchema.parse(req.body);
+
+    const updatedTransaction = await updateTransactionService(
+      userId,
+      transactionId,
+      body
+    );
+
+    if (!updatedTransaction) {
+      return res.status(HTTPSTATUS.BAD_REQUEST).json({
+        message: "Transaction not updated",
+      });
+    }
+
+    return res.status(HTTPSTATUS.OK).json({
+      message: "Transaction updated successfully",
+      data: { transaction: updatedTransaction },
+    });
+  }
+);
+
+export const deleteTransactionController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const userId = req.user?._id;
+    const transactionId = transactionIdSchema.parse(req.params.id);
+
+    const deletedTransaction = await deleteTransactionService(
+      userId,
+      transactionId
+    );
+
+    if (!deletedTransaction) {
+      return res.status(HTTPSTATUS.NOT_FOUND).json({
+        message: "Transaction not found",
+      });
+    }
+
+    return res.status(HTTPSTATUS.OK).json({
+      message: "Transaction deleted successfully",
+      data: { transaction: deletedTransaction },
     });
   }
 );

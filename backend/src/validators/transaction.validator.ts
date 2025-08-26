@@ -15,6 +15,7 @@ export const baseTransactionSchema = z.object({
   type: z.enum([TransactionTypeEnum.INCOME, TransactionTypeEnum.EXPENSE], {
     message: "Transaction type must be INCOME or EXPENSE",
   }),
+  description: z.string().optional(),
   amount: z.number().positive("Amount must be a positive number").min(1),
   category: z.string().min(1, "Category is required"),
   date: z
