@@ -15,6 +15,7 @@ import {
   duplicateTransactionService,
   getAllTransactionService,
   getTransactionByIdService,
+  scanReceiptService,
   updateTransactionService,
 } from "../services/transaction.service";
 import {
@@ -191,5 +192,32 @@ export const bulkTransactionController = asyncHandler(
       message: "Bulk transaction inserted successful",
       data: { ...results },
     });
+  }
+);
+
+export const scanReceiptController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const userId = req.user?._id;
+    const { file } = req;
+
+    const result = await scanReceiptService(file);
+
+    if (!result) {
+      return res.status(HTTPSTATUS.BAD_REQUEST).json({
+        message: "Receipt not scanned",
+      });
+    }
+
+    return res.status(HTTPSTATUS.OK).json({
+      message: "Receipt scanned successfully",
+      data: { ...result },
+    });
+
+    // const body = createTransactionSchema.parse(result);
+    // const transaction = await createTransactionService(body, userId);
+    // return res.status(HTTPSTATUS.CREATED).json({
+    //   message: "Transaction created successfully",
+    //   data: { transaction },
+    // });
   }
 );
