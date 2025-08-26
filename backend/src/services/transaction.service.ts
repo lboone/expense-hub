@@ -5,7 +5,10 @@ import type {
 import TransactionModel from "../models/transaction.model";
 import { NotFoundException } from "../utils/app-error";
 import { calculateNextOccurrence } from "../utils/helper";
-import type { CreateTransactionType } from "../validators/transaction.validator";
+import type {
+  CreateTransactionType,
+  UpdateTransactionType,
+} from "../validators/transaction.validator";
 
 export const createTransactionService = async (
   body: CreateTransactionType,
@@ -125,4 +128,62 @@ export const duplicateTransactionService = async (
     updatedAt: undefined,
   });
   return duplicatedTransaction;
+};
+
+export const updateTransactionService = async (
+  userId: string,
+  transactionId: string | undefined,
+  body: UpdateTransactionType
+) => {
+  const existingTransaction = await TransactionModel.findOne({
+    _id: transactionId,
+    userId,
+  });
+
+  if (!existingTransaction)
+    throw new NotFoundException("Transaction not found");
+
+  const now = new Date();
+  const isRecurring = body.isRecurring ?? existingTransaction.isRecurring;
+  const date =
+    body.date !== undefined ? new Date(body.date) : existingTransaction.date;
+  const recurringInterval =
+    body.recurringInterval || existingTransaction.recurringInterval;
+  let nextRecurringDate: Date | undefined;
+
+  if (isRecurring && recurringInterval) {
+    const calculatedDate = calculateNextOccurrence(date, recurringInterval);
+
+    nextRecurringDate =
+      calculatedDate < now
+        ? calculateNextOccurrence(now, recurringInterval)
+        : calculatedDate;
+  }
+
+  existingTransaction.set({
+    ...(body.title && { title: body.title }),
+    ...(body.description && { description: body.description }),
+    ...(body.category && { category: body.category }),
+    ...(body.type && { type: body.type }),
+    ...(body.paymentMethod && { paymentMethod: body.paymentMethod }),
+    ...(body.amount !== undefined && { amount: Number(body.amount) }),
+    date,
+    isRecurring,
+    recurringInterval,
+    nextRecurringDate,
+  });
+  await existingTransaction.save();
+  return existingTransaction;
+};
+
+export const deleteTransactionService = async (
+  userId: string,
+  transactionId: string | undefined
+) => {
+  const transaction = await TransactionModel.findOneAndDelete({
+    _id: transactionId,
+    userId,
+  });
+  if (!transaction) throw new NotFoundException("Transaction not found");
+  return transaction;
 };
