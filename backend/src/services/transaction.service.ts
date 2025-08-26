@@ -187,3 +187,21 @@ export const deleteTransactionService = async (
   if (!transaction) throw new NotFoundException("Transaction not found");
   return transaction;
 };
+
+export const bulkDeleteTransactionService = async (
+  userId: string,
+  transactionIds: string[]
+) => {
+  const result = await TransactionModel.deleteMany({
+    _id: { $in: transactionIds },
+    userId,
+  });
+
+  if (result.deletedCount === 0) {
+    throw new NotFoundException("No transactions found");
+  }
+  return {
+    success: true,
+    deletedCount: result.deletedCount,
+  };
+};
