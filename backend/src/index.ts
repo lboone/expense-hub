@@ -12,6 +12,7 @@ import { initializeCrons } from "./crons";
 import { asyncHandler } from "./middlewares/asyncHandler.middleware";
 import errorHandler from "./middlewares/errorHandler.middleware";
 import authRoutes from "./routes/auth.route";
+import reportRoutes from "./routes/report.route";
 import transactionRoutes from "./routes/transaction.route";
 import userRoutes from "./routes/user.route";
 
@@ -44,6 +45,7 @@ app.use(
   passportAuthenticatedJwt,
   transactionRoutes
 );
+app.use(`${BASE_PATH}/report`, passportAuthenticatedJwt, reportRoutes);
 
 app.use(errorHandler);
 

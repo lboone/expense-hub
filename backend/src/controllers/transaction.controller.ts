@@ -2,7 +2,6 @@ import type { Request, Response } from "express";
 import type {
   RecurringStatus,
   TransactionFilters,
-  TransactionPagination,
   TransactionType,
 } from "../@types/transaction.type";
 import HTTPSTATUS from "../config/http.config";
@@ -18,6 +17,7 @@ import {
   scanReceiptService,
   updateTransactionService,
 } from "../services/transaction.service";
+import { paginationHelper } from "../utils/helper";
 import {
   bulkDeleteTransactionSchema,
   bulkTransactionSchema,
@@ -47,10 +47,7 @@ export const getAllTransactionController = asyncHandler(
       type: req.query.type as TransactionType,
       recurringStatus: req.query.recurringStatus as RecurringStatus,
     };
-    const pagination: TransactionPagination = {
-      pageSize: parseInt(req.query.pageSize as string) || 20,
-      pageNumber: parseInt(req.query.pageNumber as string) || 1,
-    };
+    const pagination = paginationHelper(req);
     const transactions = await getAllTransactionService(
       userId,
       filters,
