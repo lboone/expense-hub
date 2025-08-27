@@ -66,7 +66,6 @@ export const loginService = async (
     const isMatch = await user.comparePassword(password);
     if (!isMatch) throw new UnauthorizedException("Invalid email or password");
 
-    console.log("User:", user.id);
     const { token, expiresAt } = signJwtToken({ userId: user.id });
 
     const reportSetting = await ReportSettingModel.findOne(
