@@ -4,6 +4,11 @@ import {
 } from "../enums/transaction.enum";
 
 declare global {
+  namespace Express {
+    interface User extends User.IDocument {
+      _id?: any;
+    }
+  }
   namespace System {
     interface IPagination {
       pageSize: number | 20;
@@ -30,9 +35,6 @@ declare global {
       comparePassword: (password: string) => Promise<boolean>;
       omitPassword: () => Omit<User.IDocument, "password">;
     }
-    interface IWithID extends User.IDocument {
-      _id?: any;
-    }
     interface IRegisterResult {
       user: Omit<User.IDocument, "password">;
     }
@@ -41,6 +43,16 @@ declare global {
       accessToken: string;
       expiresAt: number | undefined;
       reportSetting: any;
+    }
+  }
+  namespace Report {
+    interface IInsightsAI {
+      totalIncome: number;
+      totalExpenses: number;
+      availableBalance: number;
+      savingsRate: number;
+      categories: Record<string, { amount: number; percentage: number }>;
+      periodLabel: string;
     }
   }
 }

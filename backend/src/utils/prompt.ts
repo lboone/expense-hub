@@ -39,14 +39,7 @@ export const reportInsightPrompt = ({
   savingsRate,
   categories,
   periodLabel,
-}: {
-  totalIncome: number;
-  totalExpenses: number;
-  availableBalance: number;
-  savingsRate: number;
-  categories: Record<string, { amount: number; percentage: number }>;
-  periodLabel: string;
-}) => {
+}: Report.IInsightsAI) => {
   const categoryList = Object.entries(categories)
     .map(
       ([name, { amount, percentage }]) =>
