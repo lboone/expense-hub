@@ -5,5 +5,9 @@ declare global {
     interface User extends UserDocument {
       _id?: any;
     }
+    interface IPagination {
+      pageSize: number | 20;
+      pageNumber: number | 1;
+    }
   }
 }

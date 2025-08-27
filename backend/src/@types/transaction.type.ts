@@ -11,8 +11,3 @@ export type TransactionFilters = {
   type?: TransactionType;
   recurringStatus?: RecurringStatus;
 };
-
-export type TransactionPagination = {
-  pageSize: number | 20;
-  pageNumber: number | 1;
-};
