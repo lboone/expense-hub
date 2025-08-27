@@ -1,5 +1,4 @@
 import mongoose from "mongoose";
-import type { ILoginResult, IRegisterResult } from "../@types/user.type";
 import { ReportFrequencyEnum } from "../enums/report.enum";
 import ReportSettingModel from "../models/report-setting.model";
 import UserModel from "../models/user.model";
@@ -17,7 +16,7 @@ import { signJwtToken } from "../utils/jwt";
 
 export const registerService = async (
   body: RegisterSchemaType
-): Promise<IRegisterResult> => {
+): Promise<User.IRegisterResult> => {
   const { email } = body;
   const session = await mongoose.startSession();
   try {
@@ -57,7 +56,7 @@ export const registerService = async (
 
 export const loginService = async (
   body: LoginSchemaType
-): Promise<ILoginResult> => {
+): Promise<User.ILoginResult> => {
   const { email, password } = body;
   try {
     const user = await UserModel.findOne({ email });

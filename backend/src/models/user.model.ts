@@ -1,8 +1,7 @@
 import { model, Schema } from "mongoose";
-import type { UserDocument } from "../@types/user.type";
 import { comparePassword, hashPassword } from "../utils/bcrypt";
 
-const userSchema = new Schema<UserDocument>(
+const userSchema = new Schema<User.IDocument>(
   {
     name: { type: String, required: true, trim: true },
     email: {
@@ -27,7 +26,10 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
-userSchema.methods.omitPassword = function (): Omit<UserDocument, "password"> {
+userSchema.methods.omitPassword = function (): Omit<
+  User.IDocument,
+  "password"
+> {
   const userObject = this.toObject();
   delete userObject.password;
   return userObject;
@@ -39,6 +41,6 @@ userSchema.methods.comparePassword = async function (
   return comparePassword(password, this.password);
 };
 
-const UserModel = model<UserDocument>("User", userSchema);
+const UserModel = model<User.IDocument>("User", userSchema);
 
 export default UserModel;

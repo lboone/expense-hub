@@ -1,6 +1,5 @@
 import { createPartFromBase64, createUserContent } from "@google/genai";
 import axios from "axios";
-import type { TransactionFilters } from "../@types/transaction.type";
 import { genAI, genAIModel } from "../config/google-ai.config";
 import TransactionModel from "../models/transaction.model";
 import { BadRequestException, NotFoundException } from "../utils/app-error";
@@ -45,8 +44,8 @@ export const createTransactionService = async (
 
 export const getAllTransactionService = async (
   userId: string,
-  filters: TransactionFilters,
-  pagination: Express.IPagination
+  filters: Transaction.Filters,
+  pagination: System.IPagination
 ) => {
   const { keyword, type, recurringStatus } = filters;
 
