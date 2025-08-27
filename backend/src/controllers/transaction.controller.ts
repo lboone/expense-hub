@@ -1,9 +1,4 @@
 import type { Request, Response } from "express";
-import type {
-  RecurringStatus,
-  TransactionFilters,
-  TransactionType,
-} from "../@types/transaction.type";
 import HTTPSTATUS from "../config/http.config";
 import { asyncHandler } from "../middlewares/asyncHandler.middleware";
 import {
@@ -42,10 +37,10 @@ export const createTransactionController = asyncHandler(
 export const getAllTransactionController = asyncHandler(
   async (req: Request, res: Response) => {
     const userId = req.user?._id;
-    const filters: TransactionFilters = {
+    const filters: Transaction.Filters = {
       keyword: req.query.keyword as string,
-      type: req.query.type as TransactionType,
-      recurringStatus: req.query.recurringStatus as RecurringStatus,
+      type: req.query.type as Transaction.Type,
+      recurringStatus: req.query.recurringStatus as Transaction.RecurringStatus,
     };
     const pagination = paginationHelper(req);
     const transactions = await getAllTransactionService(

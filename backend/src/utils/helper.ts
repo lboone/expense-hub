@@ -81,7 +81,7 @@ export function paginationHelper(
   req: Request,
   psDefault = 20,
   pnDefault = 1
-): Express.IPagination {
+): System.IPagination {
   const pageSize = parseInt(req.query.pageSize as string) || psDefault;
   const pageNumber = parseInt(req.query.pageNumber as string) || pnDefault;
 

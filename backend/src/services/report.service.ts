@@ -7,7 +7,7 @@ import type { UpdateReportSettingType } from "../validators/report.validator";
 
 export const getAllReportsService = async (
   userId: string,
-  pagination: Express.IPagination
+  pagination: System.IPagination
 ) => {
   const { pageSize, pageNumber } = pagination;
   const query: Record<string, any> = { userId };
