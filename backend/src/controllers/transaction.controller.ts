@@ -213,6 +213,7 @@ export const scanReceiptController = asyncHandler(
       data: { ...result },
     });
 
+    // If customer has auto-create enabled, create the transaction for them.
     // const body = createTransactionSchema.parse(result);
     // const transaction = await createTransactionService(body, userId);
     // return res.status(HTTPSTATUS.CREATED).json({

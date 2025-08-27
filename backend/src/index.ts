@@ -8,6 +8,7 @@ import Env from "./config/env.config";
 import HTTPSTATUS from "./config/http.config";
 import "./config/passport.config";
 import { passportAuthenticatedJwt } from "./config/passport.config";
+import { initializeCrons } from "./crons";
 import { asyncHandler } from "./middlewares/asyncHandler.middleware";
 import errorHandler from "./middlewares/errorHandler.middleware";
 import authRoutes from "./routes/auth.route";
@@ -48,5 +49,8 @@ app.use(errorHandler);
 
 app.listen(Env.PORT, async () => {
   await connectDatabase();
+  if (Env.NODE_ENV === "development") {
+    await initializeCrons();
+  }
   console.log(`Server is running on port ${Env.PORT} in ${Env.NODE_ENV} mode`);
 });
