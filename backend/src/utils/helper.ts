@@ -1,5 +1,6 @@
 import type { Request } from "express";
 
+import { createUserContent } from "@google/genai";
 import {
   addDays,
   addMonths,
@@ -11,8 +12,11 @@ import {
   startOfWeek,
   startOfYear,
 } from "date-fns";
+import { genAI, genAIModel } from "../config/google-ai.config";
 import { ReportFrequencyEnum } from "../enums/report.enum";
 import { RecurringIntervalEnum } from "../enums/transaction.enum";
+import { convertToDollars } from "./format-currency";
+import { reportInsightPrompt } from "./prompt";
 
 interface IReportDateCalculator {
   frequency: keyof typeof ReportFrequencyEnum;
@@ -89,4 +93,55 @@ export function paginationHelper(
     pageSize,
     pageNumber,
   };
+}
+
+export function calculateSavingRate(
+  totalIncome: number,
+  totalExpenses: number
+) {
+  if (totalIncome <= 0) return 0;
+
+  const savingsRate = ((totalIncome - totalExpenses) / totalIncome) * 100;
+  return parseFloat(savingsRate.toFixed(2));
+}
+
+export async function generateInsightsAI({
+  totalIncome,
+  totalExpenses,
+  availableBalance,
+  savingsRate,
+  categories,
+  periodLabel,
+}: Report.IInsightsAI) {
+  try {
+    const prompt = reportInsightPrompt({
+      totalIncome: convertToDollars(totalIncome),
+      totalExpenses: convertToDollars(totalExpenses),
+      availableBalance: convertToDollars(availableBalance),
+      savingsRate,
+      categories,
+      periodLabel,
+    });
+    console.log("AI Prompt:", prompt);
+
+    const result = await genAI.models.generateContent({
+      model: genAIModel,
+      contents: [createUserContent([prompt])],
+      config: { responseMimeType: "application/json" },
+    });
+
+    console.log("AI Raw Response:", result);
+
+    const response = result.text;
+    console.log("AI Response:", response);
+
+    const cleanedText = response?.replace(/```(?:json)?\n?/g, "").trim();
+    console.log("AI Cleaned Text:", cleanedText);
+    if (!cleanedText) return [];
+    console.log("AI JSON:", JSON.parse(cleanedText));
+    const data = JSON.parse(cleanedText);
+    return data;
+  } catch (error) {
+    return [];
+  }
 }

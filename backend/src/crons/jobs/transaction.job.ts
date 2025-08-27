@@ -25,23 +25,28 @@ export const processRecurringTransactions = async () => {
       try {
         await session.withTransaction(
           async () => {
-            // Extract only the necessary fields for the new transaction
+            console.log("****** BEFORE CREATE ******", tx);
 
-            await TransactionModel.create(
-              [
-                {
-                  ...tx.toObject(),
-                  _id: new mongoose.Types.ObjectId(),
-                  title: `Recurring - ${tx.title}`,
-                  date: tx.nextRecurringDate,
-                  isRecurring: false,
-                  nextRecurringDate: null,
-                  recurringInterval: null,
-                  lastProcessed: null,
-                },
-              ],
-              { session }
-            );
+            // Extract only the necessary fields for the new transaction
+            const txObject = tx.toObject();
+            const newTransactionData = {
+              userId: txObject.userId,
+              title: `Recurring - ${txObject.title}`,
+              type: txObject.type,
+              amount: txObject.amount,
+              category: txObject.category,
+              date: tx.nextRecurringDate,
+              isRecurring: false,
+              nextRecurringDate: null,
+              recurringInterval: null,
+              lastProcessed: null,
+              status: txObject.status,
+              paymentMethod: txObject.paymentMethod,
+              description: txObject.description,
+            };
+
+            await TransactionModel.create([newTransactionData], { session });
+            console.log("****** AFTER CREATE ******", tx);
             await TransactionModel.updateOne(
               {
                 _id: tx._id,

@@ -2,6 +2,7 @@ import type { Request, Response } from "express";
 import HTTPSTATUS from "../config/http.config";
 import { asyncHandler } from "../middlewares/asyncHandler.middleware";
 import {
+  generateReportService,
   getAllReportsService,
   getMyReportSettingService,
   updateReportSettingService,
@@ -58,6 +59,28 @@ export const getMyReportSettingController = asyncHandler(
     return res.status(HTTPSTATUS.OK).json({
       message: "Report setting retrieved successfully",
       data: { reportSetting },
+    });
+  }
+);
+
+export const generateReportController = asyncHandler(
+  async (req: Request, res: Response) => {
+    const userId = req.user?._id;
+    const { from, to } = req.query;
+
+    const fromDate = new Date(from as string);
+    const toDate = new Date(to as string);
+
+    const report = await generateReportService(userId, fromDate, toDate);
+
+    if (!report) {
+      return res.status(HTTPSTATUS.NOT_FOUND).json({
+        message: "No report created",
+      });
+    }
+    return res.status(HTTPSTATUS.OK).json({
+      message: "Report generated successfully",
+      data: { report },
     });
   }
 );
