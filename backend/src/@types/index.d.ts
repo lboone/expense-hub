@@ -1,4 +1,5 @@
 import { Document } from "mongoose";
+import { DateRangeEnum } from "../enums/analytics.enum";
 import { ReportFrequencyEnum } from "../enums/report.enum";
 import {
   TransactionRecurringStatusEnum,
@@ -75,5 +76,9 @@ declare global {
       frequency: keyof typeof ReportFrequencyEnum;
       lastSentDate?: Date;
     }
+  }
+  namespace Analytics {
+    type DateRangePreset = `${DateRangeEnum}`;
+    type DateRangeType = keyof typeof DateRangeEnum;
   }
 }
