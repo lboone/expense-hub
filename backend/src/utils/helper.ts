@@ -7,10 +7,19 @@ import {
   addQuarters,
   addWeeks,
   addYears,
+  endOfMonth,
+  endOfQuarter,
+  endOfWeek,
+  endOfYear,
   startOfMonth,
   startOfQuarter,
   startOfWeek,
   startOfYear,
+  subDays,
+  subMonths,
+  subQuarters,
+  subWeeks,
+  subYears,
 } from "date-fns";
 import { genAI, genAIModel } from "../config/google-ai.config";
 import { ReportFrequencyEnum } from "../enums/report.enum";
@@ -18,23 +27,18 @@ import { RecurringIntervalEnum } from "../enums/transaction.enum";
 import { convertToDollars } from "./format-currency";
 import { reportInsightPrompt } from "./prompt";
 
-interface IReportDateCalculator {
-  frequency: keyof typeof ReportFrequencyEnum;
-  lastSentDate?: Date;
-}
-
 export const calculateNextReportDate = ({
   frequency = ReportFrequencyEnum.MONTHLY,
   lastSentDate = new Date(),
-}: IReportDateCalculator): Date => {
+}: Report.IDateCalculator): Date => {
   let nextDate;
 
   switch (frequency) {
     case ReportFrequencyEnum.DAILY:
-      nextDate = new Date(lastSentDate.setDate(lastSentDate.getDate() + 1));
+      nextDate = addDays(lastSentDate, 1);
       break;
     case ReportFrequencyEnum.WEEKLY:
-      nextDate = startOfWeek(addMonths(lastSentDate, 1));
+      nextDate = startOfWeek(addWeeks(lastSentDate, 1));
       break;
     case ReportFrequencyEnum.MONTHLY:
       nextDate = startOfMonth(addMonths(lastSentDate, 1));
@@ -79,6 +83,51 @@ export function calculateNextOccurrence(
     default:
       return base;
   }
+}
+
+export function calculateFromToReportPeriod(
+  frequency: keyof typeof ReportFrequencyEnum
+) {
+  const now = new Date();
+  let from: Date;
+  let to: Date;
+
+  switch (frequency) {
+    case ReportFrequencyEnum.DAILY:
+      // Previous day
+      from = subDays(now, 1);
+      from.setHours(0, 0, 0, 0);
+      to = new Date(from);
+      to.setHours(23, 59, 59, 999);
+      break;
+    case ReportFrequencyEnum.WEEKLY:
+      // Previous week
+      const previousWeekStart = startOfWeek(subWeeks(now, 1));
+      from = previousWeekStart;
+      to = endOfWeek(previousWeekStart);
+      break;
+    case ReportFrequencyEnum.MONTHLY:
+      // Previous month
+      from = startOfMonth(subMonths(now, 1));
+      to = endOfMonth(subMonths(now, 1));
+      break;
+    case ReportFrequencyEnum.QUARTERLY:
+      // Previous quarter
+      from = startOfQuarter(subQuarters(now, 1));
+      to = endOfQuarter(subQuarters(now, 1));
+      break;
+    case ReportFrequencyEnum.ANNUALLY:
+      // Previous year
+      from = startOfYear(subYears(now, 1));
+      to = endOfYear(subYears(now, 1));
+      break;
+    default:
+      // Previous month
+      from = startOfMonth(subMonths(now, 1));
+      to = endOfMonth(subMonths(now, 1));
+  }
+
+  return { from, to };
 }
 
 export function paginationHelper(
@@ -144,4 +193,8 @@ export async function generateInsightsAI({
   } catch (error) {
     return [];
   }
+}
+
+export function capitalizeFirstLetter(string: string): string {
+  return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 }

@@ -1,3 +1,5 @@
+import { Document } from "mongoose";
+import { ReportFrequencyEnum } from "../enums/report.enum";
 import {
   TransactionRecurringStatusEnum,
   TransactionTypeEnum,
@@ -53,6 +55,25 @@ declare global {
       savingsRate: number;
       categories: Record<string, { amount: number; percentage: number }>;
       periodLabel: string;
+    }
+    interface IEmailParams {
+      email: string;
+      username: string;
+      report: Report.IType;
+      frequency: string;
+    }
+    interface IType {
+      period: string;
+      totalIncome: number;
+      totalExpenses: number;
+      availableBalance: number;
+      savingsRate: number;
+      topSpendingCategories: Array<{ name: string; percent: number }>;
+      insights: string[];
+    }
+    interface IDateCalculator {
+      frequency: keyof typeof ReportFrequencyEnum;
+      lastSentDate?: Date;
     }
   }
 }
