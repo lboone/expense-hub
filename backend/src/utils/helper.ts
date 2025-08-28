@@ -192,3 +192,11 @@ export async function generateInsightsAI({
 export function capitalizeFirstLetter(string: string): string {
   return string.charAt(0).toUpperCase() + string.slice(1).toLowerCase();
 }
+
+export function calculatePercentageChange(previous: number, current: number) {
+  if (previous === 0) return current === 0 ? 0 : 100;
+  const changes = ((current - previous) / Math.abs(previous)) * 100;
+  const cappedChange = Math.min(Math.max(changes, -500), 500);
+
+  return parseFloat(cappedChange.toFixed(2));
+}

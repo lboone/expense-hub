@@ -44,3 +44,4 @@ public/temp/
 # Custom files
 generate-jwt-secret.js
 info.accounts
+transactions*
