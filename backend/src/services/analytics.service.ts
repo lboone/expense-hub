@@ -1,5 +1,5 @@
 import { differenceInDays, subDays, subYears } from "date-fns";
-import mongoose from "mongoose";
+import mongoose, { type PipelineStage } from "mongoose";
 import { DateRangeEnum } from "../enums/date-range.enum";
 import { TransactionTypeEnum } from "../enums/transaction.enum";
 import TransactionModel from "../models/transaction.model";
@@ -232,6 +232,250 @@ export const summaryAnalyticsService = async (
         ),
       },
     },
+    preset: {
+      ...range,
+      value: rangeValue || DateRangeEnum.ALL_TIME,
+      label: range?.label || "All Time",
+    },
+  };
+};
+
+export const chartAnalyticsService = async (
+  userId: string,
+  dateRangePreset?: Analytics.DateRangePreset,
+  customFrom?: Date,
+  customTo?: Date
+) => {
+  const range = getDateRange(dateRangePreset, customFrom, customTo);
+  const { from, to, value: rangeValue } = range;
+
+  const filter: any = {
+    userId: new mongoose.Types.ObjectId(userId),
+    ...(from &&
+      to && {
+        date: {
+          $gte: from,
+          $lte: to,
+        },
+      }),
+  };
+
+  const result = await TransactionModel.aggregate([
+    { $match: filter },
+    //Group the transaction by date (YYYY-MM-DD)
+    {
+      $group: {
+        _id: {
+          $dateToString: {
+            format: "%Y-%m-%d",
+            date: "$date",
+          },
+        },
+
+        income: {
+          $sum: {
+            $cond: [
+              { $eq: ["$type", TransactionTypeEnum.INCOME] },
+              { $abs: "$amount" },
+              0,
+            ],
+          },
+        },
+
+        expenses: {
+          $sum: {
+            $cond: [
+              { $eq: ["$type", TransactionTypeEnum.EXPENSE] },
+              { $abs: "$amount" },
+              0,
+            ],
+          },
+        },
+
+        incomeCount: {
+          $sum: {
+            $cond: [{ $eq: ["$type", TransactionTypeEnum.INCOME] }, 1, 0],
+          },
+        },
+
+        expenseCount: {
+          $sum: {
+            $cond: [{ $eq: ["$type", TransactionTypeEnum.EXPENSE] }, 1, 0],
+          },
+        },
+      },
+    },
+
+    { $sort: { _id: 1 } },
+
+    {
+      $project: {
+        _id: 0,
+        date: "$_id",
+        income: 1,
+        expenses: 1,
+        incomeCount: 1,
+        expenseCount: 1,
+      },
+    },
+
+    {
+      $group: {
+        _id: null,
+        chartData: { $push: "$$ROOT" },
+        totalIncomeCount: { $sum: "$incomeCount" },
+        totalExpenseCount: { $sum: "$expenseCount" },
+      },
+    },
+
+    {
+      $project: {
+        _id: 0,
+        chartData: 1,
+        totalIncomeCount: 1,
+        totalExpenseCount: 1,
+      },
+    },
+  ]);
+
+  const resultData = result[0] || {};
+
+  const transaformedData = (resultData?.chartData || []).map((item: any) => ({
+    date: item.date,
+    income: convertToDollars(item.income),
+    expenses: convertToDollars(item.expenses),
+  }));
+
+  return {
+    chartData: transaformedData,
+    totalIncomeCount: resultData.totalIncomeCount,
+    totalExpenseCount: resultData.totalExpenseCount,
+    preset: {
+      ...range,
+      value: rangeValue || DateRangeEnum.ALL_TIME,
+      label: range?.label || "All Time",
+    },
+  };
+};
+
+export const expensePieChartBreakdownService = async (
+  userId: string,
+  dateRangePreset?: Analytics.DateRangePreset,
+  customFrom?: Date,
+  customTo?: Date
+) => {
+  const range = getDateRange(dateRangePreset, customFrom, customTo);
+  const { from, to, value: rangeValue } = range;
+
+  const filter: any = {
+    userId: new mongoose.Types.ObjectId(userId),
+    type: TransactionTypeEnum.EXPENSE,
+    ...(from &&
+      to && {
+        date: {
+          $gte: from,
+          $lte: to,
+        },
+      }),
+  };
+
+  const pipleline: PipelineStage[] = [
+    {
+      $match: filter,
+    },
+    {
+      $group: {
+        _id: "$category",
+        value: { $sum: { $abs: "$amount" } },
+      },
+    },
+    { $sort: { value: -1 } }, //
+
+    {
+      $facet: {
+        topThree: [{ $limit: 3 }],
+        others: [
+          { $skip: 3 },
+          {
+            $group: {
+              _id: "others",
+              value: { $sum: "$value" },
+            },
+          },
+        ],
+      },
+    },
+
+    {
+      $project: {
+        categories: {
+          $concatArrays: ["$topThree", "$others"],
+        },
+      },
+    },
+
+    { $unwind: "$categories" },
+
+    {
+      $group: {
+        _id: null,
+        totalSpent: { $sum: "$categories.value" },
+        breakdown: { $push: "$categories" },
+      },
+    },
+
+    {
+      $project: {
+        _id: 0,
+        totalSpent: 1,
+        breakdown: {
+          // .map((cat: any)=> )
+          $map: {
+            input: "$breakdown",
+            as: "cat",
+            in: {
+              name: "$$cat._id",
+              value: "$$cat.value",
+              percentage: {
+                $cond: [
+                  { $eq: ["$totalSpent", 0] },
+                  0,
+                  {
+                    $round: [
+                      {
+                        $multiply: [
+                          { $divide: ["$$cat.value", "$totalSpent"] },
+                          100,
+                        ],
+                      },
+                      0,
+                    ],
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    },
+  ];
+
+  const result = await TransactionModel.aggregate(pipleline);
+
+  const data = result[0] || {
+    totalSpent: 0,
+    breakdown: [],
+  };
+  const transformedData = {
+    totalSpent: convertToDollars(data.totalSpent),
+    breakdown: data.breakdown.map((item: any) => ({
+      ...item,
+      value: convertToDollars(item.value),
+    })),
+  };
+
+  return {
+    ...transformedData,
     preset: {
       ...range,
       value: rangeValue || DateRangeEnum.ALL_TIME,

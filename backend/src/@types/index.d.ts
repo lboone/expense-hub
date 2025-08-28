@@ -1,5 +1,5 @@
 import { Document } from "mongoose";
-import { DateRangeEnum } from "../enums/analytics.enum";
+import { DateRangeEnum } from "../enums/date-range.enum";
 import { ReportFrequencyEnum } from "../enums/report.enum";
 import {
   TransactionRecurringStatusEnum,
