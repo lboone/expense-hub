@@ -47,8 +47,6 @@ export const reportInsightPrompt = ({
     )
     .join("\n");
 
-  console.log(categoryList, "category list");
-
   return `
   You are a friendly and smart financial coach, not a robot.
 

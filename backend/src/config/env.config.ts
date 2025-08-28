@@ -18,6 +18,8 @@ const envConfig = () => ({
   CLOUDINARY_URL: getEnv("CLOUDINARY_URL"),
   RESEND_API_KEY: getEnv("RESEND_API_KEY"),
   RESEND_MAILER_SENDER: getEnv("RESEND_MAILER_SENDER"),
+  GMAIL_USER: getEnv("GMAIL_USER"),
+  GMAIL_PASS: getEnv("GMAIL_PASS"),
 });
 
 const Env = envConfig();

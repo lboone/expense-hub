@@ -171,7 +171,6 @@ export async function generateInsightsAI({
       categories,
       periodLabel,
     });
-    console.log("AI Prompt:", prompt);
 
     const result = await genAI.models.generateContent({
       model: genAIModel,
@@ -179,15 +178,10 @@ export async function generateInsightsAI({
       config: { responseMimeType: "application/json" },
     });
 
-    console.log("AI Raw Response:", result);
-
     const response = result.text;
-    console.log("AI Response:", response);
 
     const cleanedText = response?.replace(/```(?:json)?\n?/g, "").trim();
-    console.log("AI Cleaned Text:", cleanedText);
     if (!cleanedText) return [];
-    console.log("AI JSON:", JSON.parse(cleanedText));
     const data = JSON.parse(cleanedText);
     return data;
   } catch (error) {

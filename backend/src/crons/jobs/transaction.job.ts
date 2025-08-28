@@ -25,8 +25,6 @@ export const processRecurringTransactions = async () => {
       try {
         await session.withTransaction(
           async () => {
-            console.log("****** BEFORE CREATE ******", tx);
-
             // Extract only the necessary fields for the new transaction
             const txObject = tx.toObject();
             const newTransactionData = {
@@ -46,7 +44,6 @@ export const processRecurringTransactions = async () => {
             };
 
             await TransactionModel.create([newTransactionData], { session });
-            console.log("****** AFTER CREATE ******", tx);
             await TransactionModel.updateOne(
               {
                 _id: tx._id,
