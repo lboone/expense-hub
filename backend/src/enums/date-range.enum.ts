@@ -1,5 +1,5 @@
 export enum DateRangeEnum {
-  LAST_30_DAYS = "30Days",
+  LAST_30_DAYS = "last30Days",
   LAST_MONTH = "lastMonth",
   THIS_MONTH = "thisMonth",
   LAST_3_MONTHS = "last3Months",
