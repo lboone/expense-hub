@@ -41,7 +41,6 @@ export const processReportJob = async () => {
 
       try {
         const report = await generateReportService(user.id, from, to);
-        console.log(report, "report data");
         let emailSent = false;
 
         if (report) {
