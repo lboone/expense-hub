@@ -9,6 +9,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { useRegisterMutation } from "@/features/auth/authAPI";
 import { AUTH_ROUTES } from "@/routes/common/routePath";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader } from "lucide-react";
@@ -27,9 +28,7 @@ type FormValues = z.infer<typeof schema>;
 
 const SignUpForm = () => {
   const navigate = useNavigate();
-  // const [register,{isLoading}] = useRegisterMutation();
-
-  const isLoading = false;
+  const [register, { isLoading }] = useRegisterMutation();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -37,20 +36,17 @@ const SignUpForm = () => {
 
   const onSubmit = (values: FormValues) => {
     console.log(values);
-    toast.success("Sign up successful");
-    navigate(AUTH_ROUTES.SIGN_IN);
-
-    // register(values)
-    // .unwrap()
-    // .then(() => {
-    //   form.reset();
-    //   toast.success("Sign up successful");
-    //   navigate(AUTH_ROUTES.SIGN_IN);
-    // })
-    // .catch((error) => {
-    //   console.log(error);
-    //   toast.error(error.data?.message || "Failed to sign up");
-    // });
+    register(values)
+      .unwrap()
+      .then(() => {
+        form.reset();
+        toast.success("Sign up successful");
+        navigate(AUTH_ROUTES.SIGN_IN);
+      })
+      .catch((error) => {
+        console.log(error);
+        toast.error(error.data?.message || "Failed to sign up");
+      });
   };
 
   return (
