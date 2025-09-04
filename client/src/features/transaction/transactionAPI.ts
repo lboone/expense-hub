@@ -66,7 +66,7 @@ export const transactionApi = apiClient.injectEndpoints({
     duplicateTransaction: builder.mutation<void, string>({
       query: (id) => ({
         url: `/transaction/${id}/duplicate`,
-        method: "PUT",
+        method: "POST",
       }),
       invalidatesTags: ["transactions"],
     }),

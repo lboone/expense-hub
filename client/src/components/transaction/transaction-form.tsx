@@ -1,9 +1,5 @@
-import * as z from "zod";
-import { useEffect, useState } from "react";
-import { Calendar } from "lucide-react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import {
   Form,
   FormControl,
@@ -13,7 +9,12 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -21,26 +22,32 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
-import { format } from "date-fns";
-import { Calendar as CalendarComponent } from "@/components/ui/calendar";
-import RecieptScanner from "./reciept-scanner";
+import { Textarea } from "@/components/ui/textarea";
 import {
   _TRANSACTION_FREQUENCY,
   _TRANSACTION_TYPE,
   CATEGORIES,
   PAYMENT_METHODS,
 } from "@/constant";
-import { Switch } from "../ui/switch";
+import {
+  useCreateTransactionMutation,
+  useGetSingleTransactionQuery,
+  useUpdateTransactionMutation,
+} from "@/features/transaction/transactionAPI";
+import { AIScanReceiptData } from "@/features/transaction/transationType";
+import { cn } from "@/lib/utils";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
+import { Calendar, Loader } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import * as z from "zod";
+import SpinnerButton from "../spinner-button";
 import CurrencyInputField from "../ui/currency-input";
 import { SingleSelector } from "../ui/single-select";
-import { AIScanReceiptData } from "@/features/transaction/transationType";
+import { Switch } from "../ui/switch";
+import RecieptScanner from "./reciept-scanner";
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters." }),
@@ -60,6 +67,7 @@ const formSchema = z.object({
     .enum([
       _TRANSACTION_FREQUENCY.DAILY,
       _TRANSACTION_FREQUENCY.WEEKLY,
+      _TRANSACTION_FREQUENCY.BI_WEEKLY,
       _TRANSACTION_FREQUENCY.MONTHLY,
       _TRANSACTION_FREQUENCY.YEARLY,
     ])
@@ -71,60 +79,58 @@ const formSchema = z.object({
 
 type FormValues = z.infer<typeof formSchema>;
 
-const TransactionForm = (props: { 
-  isEdit?: boolean; 
-  transactionId?: string
+const TransactionForm = (props: {
+  isEdit?: boolean;
+  transactionId?: string;
   onCloseDrawer?: () => void;
- }) => {
-  const {onCloseDrawer, isEdit = false, transactionId } = props;
+}) => {
+  const { onCloseDrawer, isEdit = false, transactionId } = props;
 
   const [isScanning, setIsScanning] = useState(false);
 
-  // const {data, isLoading } = useGetSingleTransactionQuery(
-  //   transactionId || "",{skip: !transactionId}
-  // );
-  // const editData = data?.data;
+  const { data, isLoading } = useGetSingleTransactionQuery(
+    transactionId || "",
+    { skip: !transactionId }
+  );
+  const editData = data?.data.transaction;
 
-  // const [createTransaction, { isLoading: isCreating }] =
-  //   useCreateTransactionMutation();
+  const [createTransaction, { isLoading: isCreating }] =
+    useCreateTransactionMutation();
 
-  // const [updateTransaction, { isLoading: isUpdating }] =
-  //   useUpdateTransactionMutation();
-
+  const [updateTransaction, { isLoading: isUpdating }] =
+    useUpdateTransactionMutation();
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      title: "",
-      amount: "",
-      type: _TRANSACTION_TYPE.INCOME,
-      category: "",
-      date: new Date(),
-      paymentMethod: "",
-      isRecurring: false,
-      frequency: null,
-      description: "",
+      title: editData?.title || "",
+      amount: editData?.amount?.toString() || "",
+      type: editData?.type || _TRANSACTION_TYPE.INCOME,
+      category: editData?.category || "",
+      date: editData?.date ? new Date(editData.date) : new Date(),
+      paymentMethod: editData?.paymentMethod || "",
+      isRecurring: editData?.isRecurring || false,
+      frequency: editData?.recurringInterval || null,
+      description: editData?.description || "",
       receiptUrl: "",
-
     },
   });
 
   useEffect(() => {
-    if (isEdit && transactionId) {
-
+    if (isEdit && transactionId && editData) {
       form.reset({
-        title: "",
-        amount: "",
-        type: _TRANSACTION_TYPE.INCOME,
-        category: "",
-        date: new Date(),
-        paymentMethod: "",
-        isRecurring: false,
-        frequency: null,
-        description: "",
-      })
+        title: editData.title,
+        amount: editData.amount.toString(),
+        type: editData.type,
+        category: editData.category.toLowerCase(),
+        date: new Date(editData.date),
+        paymentMethod: editData.paymentMethod,
+        isRecurring: editData.isRecurring,
+        frequency: editData.recurringInterval,
+        description: editData.description,
+      });
     }
-  }, [form, isEdit, transactionId]);
+  }, [form, isEdit, transactionId, editData]);
 
   const frequencyOptions = Object.entries(_TRANSACTION_FREQUENCY).map(
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -147,8 +153,9 @@ const TransactionForm = (props: {
       frequency: null,
       description: data.description || "",
       receiptUrl: data.receiptUrl || "",
-    })
+    });
   };
+
   // Handle form submission
   const onSubmit = (values: FormValues) => {
     // if (isCreating || isUpdating) return;
@@ -167,28 +174,27 @@ const TransactionForm = (props: {
     if (isEdit && transactionId) {
       console.log("Edit transaction:", payload);
       onCloseDrawer?.();
-      // updateTransaction({id: transactionId, transaction: payload})
-      // .unwrap()
-      // .then(() => {
-      //   onCloseDrawer?.();
-      //   toast.success("Transaction updated successfully");
-      // })
-      // .catch((error) => {
-      //   toast.error(error.data.message || "Failed to update transaction");
-      // });
+      updateTransaction({ id: transactionId, transaction: payload })
+        .unwrap()
+        .then(() => {
+          onCloseDrawer?.();
+          toast.success("Transaction updated successfully");
+        })
+        .catch((error) => {
+          toast.error(error.data.message || "Failed to update transaction");
+        });
       return;
     }
-    // createTransaction(payload)
-    //   .unwrap()
-    //   .then(() => {
-    //     form.reset();
-    //     onCloseDrawer?.();
-    //     toast.success("Transaction created successfully");
-    //   })
-    //   .catch((error) => {
-    //     toast.error(error.data.message || "Failed to create transaction");
-    //   });
-    
+    createTransaction(payload)
+      .unwrap()
+      .then(() => {
+        form.reset();
+        onCloseDrawer?.();
+        toast.success("Transaction created successfully");
+      })
+      .catch((error) => {
+        toast.error(error.data.message || "Failed to create transaction");
+      });
   };
 
   return (
@@ -199,7 +205,7 @@ const TransactionForm = (props: {
             {/* Receipt Upload Section */}
             {!isEdit && (
               <RecieptScanner
-              loadingChange={isScanning}
+                loadingChange={isScanning}
                 onScanComplete={handleScanComplete}
                 onLoadingChange={setIsScanning}
               />
@@ -214,7 +220,7 @@ const TransactionForm = (props: {
                   <FormLabel>Transaction Type</FormLabel>
                   <RadioGroup
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    value={field.value}
                     className="flex space-x-2"
                     disabled={isScanning}
                   >
@@ -311,8 +317,12 @@ const TransactionForm = (props: {
                 <FormItem>
                   <FormLabel>Category</FormLabel>
                   <SingleSelector
-                    value={CATEGORIES.find((opt) => opt.value === field.value) || field.value ? {value: field.value, label: field.value} : undefined}
-                    
+                    value={
+                      CATEGORIES.find((opt) => opt.value === field.value) ||
+                      field.value
+                        ? { value: field.value, label: field.value }
+                        : undefined
+                    }
                     onChange={(option) => field.onChange(option.value)}
                     options={CATEGORIES}
                     placeholder="Select or type a category"
@@ -350,13 +360,15 @@ const TransactionForm = (props: {
                         </Button>
                       </FormControl>
                     </PopoverTrigger>
-                    <PopoverContent className="w-auto p-0 !pointer-events-auto" 
-                    align="start">
+                    <PopoverContent
+                      className="w-auto p-0 !pointer-events-auto"
+                      align="start"
+                    >
                       <CalendarComponent
                         mode="single"
                         selected={field.value}
                         onSelect={(date) => {
-                          console.log(date)
+                          console.log(date);
                           field.onChange(date); // This updates the form value
                         }}
                         disabled={(date) => date < new Date("2023-01-01")}
@@ -368,7 +380,6 @@ const TransactionForm = (props: {
                 </FormItem>
               )}
             />
-            
 
             {/* Payment Method */}
             <FormField
@@ -379,7 +390,7 @@ const TransactionForm = (props: {
                   <FormLabel>Payment Method</FormLabel>
                   <Select
                     onValueChange={field.onChange}
-                    defaultValue={field.value}
+                    value={field.value}
                     disabled={isScanning}
                   >
                     <FormControl className="w-full">
@@ -427,7 +438,7 @@ const TransactionForm = (props: {
                             "frequency",
                             _TRANSACTION_FREQUENCY.DAILY
                           );
-                        }else{
+                        } else {
                           form.setValue("frequency", null);
                         }
                       }}
@@ -496,10 +507,28 @@ const TransactionForm = (props: {
           </div>
 
           <div className="sticky bottom-0 bg-white dark:bg-background pb-2">
-            <Button type="submit" className="w-full !text-white" disabled={isScanning}>
+            {/* <Button
+              type="submit"
+              className="w-full !text-white"
+              disabled={isScanning || isCreating}
+            >
               {isEdit ? "Update" : "Save"}
-            </Button>
+            </Button> */}
+            <SpinnerButton
+              type="submit"
+              className="w-full !text-white"
+              disabled={isScanning || isCreating || isUpdating}
+              isLoading={isScanning || isCreating || isUpdating}
+            >
+              {isEdit ? "Update" : "Save"}
+            </SpinnerButton>
           </div>
+          {isUpdating ||
+            (isLoading && (
+              <div className="absolute top-0 left-0 right-0 bottom-0 bg-white/70 dark:bg-background/70 z-50 flex justify-center">
+                <Loader className="h-8 w-8 animate-spin" />
+              </div>
+            ))}
         </form>
       </Form>
     </div>
