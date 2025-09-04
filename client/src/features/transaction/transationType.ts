@@ -47,6 +47,7 @@ export interface TransactionType {
   createdAt: string;
   updatedAt: string;
   id?: string;
+  receiptUrl?: string;
 }
 
 export interface GetAllTransactionResponse {
