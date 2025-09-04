@@ -1,14 +1,14 @@
-import { useState } from "react";
-import { Menu } from "lucide-react";
-import { NavLink, useLocation } from "react-router-dom";
-import { PROTECTED_ROUTES } from "@/routes/common/routePath";
+import { useTypedSelector } from "@/app/hook";
 import { cn } from "@/lib/utils";
+import { PROTECTED_ROUTES } from "@/routes/common/routePath";
+import { Menu } from "lucide-react";
+import { useState } from "react";
+import { NavLink, useLocation } from "react-router-dom";
 import Logo from "../logo/logo";
 import { Button } from "../ui/button";
 import { Sheet, SheetContent } from "../ui/sheet";
-import { UserNav } from "./user-nav";
 import LogoutDialog from "./logout-dialog";
-import { useTypedSelector } from "@/app/hook";
+import { UserNav } from "./user-nav";
 
 const Navbar = () => {
   const { pathname } = useLocation();
@@ -67,6 +67,7 @@ const Navbar = () => {
                 <Button
                   size="sm"
                   variant="ghost"
+                  key={route.href}
                   className={cn(
                     `w-full lg:w-auto font-normal py-4.5
                      hover:text-white border-none
