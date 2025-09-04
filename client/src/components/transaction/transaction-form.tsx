@@ -47,7 +47,7 @@ import SpinnerButton from "../spinner-button";
 import CurrencyInputField from "../ui/currency-input";
 import { SingleSelector } from "../ui/single-select";
 import { Switch } from "../ui/switch";
-import RecieptScanner from "./reciept-scanner";
+import ReceiptScanner from "./receipt-scanner";
 
 const formSchema = z.object({
   title: z.string().min(2, { message: "Title must be at least 2 characters." }),
@@ -112,7 +112,7 @@ const TransactionForm = (props: {
       isRecurring: editData?.isRecurring || false,
       frequency: editData?.recurringInterval || null,
       description: editData?.description || "",
-      receiptUrl: "",
+      receiptUrl: editData?.receiptUrl || "",
     },
   });
 
@@ -128,6 +128,7 @@ const TransactionForm = (props: {
         isRecurring: editData.isRecurring,
         frequency: editData.recurringInterval,
         description: editData.description,
+        receiptUrl: editData.receiptUrl || "",
       });
     }
   }, [form, isEdit, transactionId, editData]);
@@ -170,6 +171,7 @@ const TransactionForm = (props: {
       date: values.date.toISOString(),
       isRecurring: values.isRecurring || false,
       recurringInterval: values.frequency || null,
+      receiptUrl: values.receiptUrl || "",
     };
     if (isEdit && transactionId) {
       console.log("Edit transaction:", payload);
@@ -204,7 +206,7 @@ const TransactionForm = (props: {
           <div className="space-y-6">
             {/* Receipt Upload Section */}
             {!isEdit && (
-              <RecieptScanner
+              <ReceiptScanner
                 loadingChange={isScanning}
                 onScanComplete={handleScanComplete}
                 onLoadingChange={setIsScanning}
@@ -504,6 +506,23 @@ const TransactionForm = (props: {
                 </FormItem>
               )}
             />
+
+            {/* Receipt Url */}
+            {isEdit && transactionId && editData?.receiptUrl && (
+              <div className="space-y-2">
+                <FormLabel>Receipt</FormLabel>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full justify-start text-left font-normal"
+                  onClick={() => window.open(editData.receiptUrl, "_blank")}
+                >
+                  <span className="text-blue-600 hover:text-blue-800 underline">
+                    View Receipt
+                  </span>
+                </Button>
+              </div>
+            )}
           </div>
 
           <div className="sticky bottom-0 bg-white dark:bg-background pb-2">
