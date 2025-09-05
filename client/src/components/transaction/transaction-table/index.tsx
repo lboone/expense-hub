@@ -1,8 +1,12 @@
 import { DataTable } from "@/components/data-table";
 import { _TRANSACTION_TYPE, _TransactionType } from "@/constant";
-import { useGetAllTransactionsQuery } from "@/features/transaction/transactionAPI";
+import {
+  useBulkDeleteTransactionMutation,
+  useGetAllTransactionsQuery,
+} from "@/features/transaction/transactionAPI";
 import useDebouncedSearch from "@/hooks/use-debounce-search";
 import { useState } from "react";
+import { toast } from "sonner";
 import { transactionColumns } from "./column";
 
 type FilterType = {
@@ -27,8 +31,8 @@ const TransactionTable = (props: {
     delay: 500,
   });
 
-  // const [bulkDeleteTransaction, { isLoading: isBulkDeleting }] =
-  //   useBulkDeleteTransactionMutation();
+  const [bulkDeleteTransaction, { isLoading: isBulkDeleting }] =
+    useBulkDeleteTransactionMutation();
 
   const { data, isFetching } = useGetAllTransactionsQuery({
     keyword: debouncedTerm,
@@ -78,14 +82,14 @@ const TransactionTable = (props: {
   const handleBulkDelete = (transactionIds: string[]) => {
     console.log(transactionIds);
 
-    // bulkDeleteTransaction(transactionIds)
-    // .unwrap()
-    // .then(() => {
-    //   toast.success("Transactions deleted successfully");
-    // })
-    // .catch((error) => {
-    //   toast.error(error.data?.message || "Failed to delete transactions");
-    // });
+    bulkDeleteTransaction(transactionIds)
+      .unwrap()
+      .then(() => {
+        toast.success("Transactions deleted successfully");
+      })
+      .catch((error) => {
+        toast.error(error.data?.message || "Failed to delete transactions");
+      });
   };
 
   return (
@@ -94,7 +98,7 @@ const TransactionTable = (props: {
       columns={transactionColumns}
       searchPlaceholder="Search transactions..."
       isLoading={isFetching}
-      isBulkDeleting={false}
+      isBulkDeleting={isBulkDeleting}
       isShowPagination={props.isShowPagination}
       pagination={pagination}
       filters={[
@@ -124,3 +128,6 @@ const TransactionTable = (props: {
   );
 };
 export default TransactionTable;
+// function bulkDeleteTransaction(transactionIds: string[]) {
+//   throw new Error("Function not implemented.");
+// }
