@@ -1,8 +1,8 @@
-import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { Clock, RefreshCw } from "lucide-react";
 import { _REPORT_STATUS, ReportStatusType } from "@/constant";
 import { ReportType } from "@/features/report/reportType";
+import { ColumnDef } from "@tanstack/react-table";
+import { Clock, RefreshCw } from "lucide-react";
 
 export const reportColumns: ColumnDef<ReportType>[] = [
   {
@@ -39,13 +39,17 @@ export const reportColumns: ColumnDef<ReportType>[] = [
         [_REPORT_STATUS.FAILED]: "bg-red-100 text-red-800",
         [_REPORT_STATUS.PENDING]: "bg-yellow-100 text-yellow-800",
         [_REPORT_STATUS.PROCESSING]: "bg-blue-100 text-blue-800",
+        [_REPORT_STATUS.NO_ACTIVITY]: "bg-gray-100 text-gray-800",
       };
-      
-      const style = statusStyles[status as ReportStatusType] || "bg-gray-100 text-gray-800";
-      
+
+      const style =
+        statusStyles[status as ReportStatusType] || "bg-gray-100 text-gray-800";
+
       return (
-        <span className={`inline-flex items-center rounded-full
-         px-2.5 py-0.5 text-xs font-medium ${style}`}>
+        <span
+          className={`inline-flex items-center rounded-full
+         px-2.5 py-0.5 text-xs font-medium ${style}`}
+        >
           {status}
         </span>
       );
@@ -74,5 +78,5 @@ export const reportColumns: ColumnDef<ReportType>[] = [
   {
     id: "-",
     header: "",
-  }
+  },
 ];

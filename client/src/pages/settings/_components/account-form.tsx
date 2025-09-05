@@ -3,7 +3,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { useTypedSelector } from "@/app/hook";
+import { useAppDispatch, useTypedSelector } from "@/app/hook";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,6 +15,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import { updateCredentials } from "@/features/auth/authSlice";
+import { useUpdateUserMutation } from "@/features/user/userAPI";
 import { Loader } from "lucide-react";
 import { toast } from "sonner";
 
@@ -31,15 +33,13 @@ const accountFormSchema = z.object({
 type AccountFormValues = z.infer<typeof accountFormSchema>;
 
 export function AccountForm() {
-  //const dispatch = useAppDispatch();
+  const dispatch = useAppDispatch();
   const { user } = useTypedSelector((state) => state.auth);
 
   const [file, setFile] = useState<File | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
-  // const [updateUserMutation, { isLoading }] = useUpdateUserMutation();
-
-  const isLoading = false;
+  const [updateUserMutation, { isLoading }] = useUpdateUserMutation();
 
   const form = useForm<AccountFormValues>({
     resolver: zodResolver(accountFormSchema),
@@ -59,20 +59,22 @@ export function AccountForm() {
 
     toast.success("Account updated successfully");
 
-    //  updateUserMutation(formData)
-    //       .unwrap()
-    //       .then((response) => {
-    //         dispatch(
-    //           updateCredentials({ user:{
-    //             profilePicture: response.data.profilePicture,
-    //             name: response.data.name,
-    //           }})
-    //         );
-    //         toast.success("Account updated successfully");
-    //       })
-    //       .catch((error) => {
-    //         toast.error(error.data.message || "Failed to update account");
-    //       });
+    updateUserMutation(formData)
+      .unwrap()
+      .then((response) => {
+        dispatch(
+          updateCredentials({
+            user: {
+              profilePicture: response.data.user.profilePicture,
+              name: response.data.user.name,
+            },
+          })
+        );
+        toast.success("Account updated successfully");
+      })
+      .catch((error) => {
+        toast.error(error.data.message || "Failed to update account");
+      });
   };
 
   const handleAvatarChange = (event: React.ChangeEvent<HTMLInputElement>) => {

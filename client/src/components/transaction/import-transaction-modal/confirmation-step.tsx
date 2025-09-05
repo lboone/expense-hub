@@ -1,18 +1,22 @@
-import { useState } from "react";
-import { z } from "zod";
-import { ChevronDown, ChevronLeft, FileCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { _TRANSACTION_TYPE, PAYMENT_METHODS_ENUM } from "@/constant";
-import { toast } from "sonner";
-import { MAX_IMPORT_LIMIT } from "@/constant";
+import { Progress } from "@/components/ui/progress";
+import {
+  _TRANSACTION_TYPE,
+  MAX_IMPORT_LIMIT,
+  PAYMENT_METHODS_ENUM,
+} from "@/constant";
+import { useBulkImportTransactionMutation } from "@/features/transaction/transactionAPI";
 import { BulkTransactionType } from "@/features/transaction/transationType";
 import { useProgressLoader } from "@/hooks/use-progress-loader";
+import { ChevronDown, ChevronLeft, FileCheck } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { z } from "zod";
 
 type ConfirmationStepProps = {
   file: File | null;
@@ -64,7 +68,9 @@ const transactionSchema = z.object({
           errorMap: (issue) => ({
             message:
               issue.code === "invalid_enum_value"
-                ? `Payment method must be one of: ${Object.values(PAYMENT_METHODS_ENUM).join(", ")}`
+                ? `Payment method must be one of: ${Object.values(
+                    PAYMENT_METHODS_ENUM
+                  ).join(", ")}`
                 : "Invalid payment method",
           }),
         }
@@ -92,7 +98,7 @@ const ConfirmationStep = ({
     resetProgress,
   } = useProgressLoader({ initialProgress: 10, completionDelay: 500 });
 
-  // const [bulkImportTransaction] = useBulkImportTransactionMutation();
+  const [bulkImportTransaction] = useBulkImportTransactionMutation();
 
   const handleImport = () => {
     const { transactions, hasValidationErrors } =
@@ -126,23 +132,24 @@ const ConfirmationStep = ({
       onComplete();
     }, 2000);
 
-    // bulkImportTransaction(payload)
-    //   .unwrap()
-    //   .then(() => {
-    //     updateProgress(100);
-    //     toast.success("Imported transactions successfully");
-    //   })
-    //   .catch((error) => {
-    //     resetProgress();
-    //     toast.error(error.data?.message || "Failed to import transactions");
-    //   })
-    //   .finally(() => {
-    //     clearInterval(interval);
-    //     setTimeout(() => {
-    //       resetProgress();
-    //       onComplete();
-    //     }, 500);
-    //   });
+    bulkImportTransaction(payload)
+      .unwrap()
+      .then(() => {
+        updateProgress(100);
+        toast.success("Imported transactions successfully");
+      })
+      .catch((error) => {
+        resetProgress();
+        toast.error(error.data?.message || "Failed to import transactions");
+      })
+      .finally(() => {
+        clearInterval(interval);
+        setTimeout(() => {
+          doneProgress();
+          resetProgress();
+          onComplete();
+        }, 500);
+      });
   };
 
   const getAssignFieldToMappedTransactions = () => {
@@ -158,8 +165,8 @@ const ConfirmationStep = ({
           transactionField === "amount"
             ? Number(row[csvColumn])
             : transactionField === "date"
-              ? new Date(row[csvColumn])
-              : row[csvColumn];
+            ? new Date(row[csvColumn])
+            : row[csvColumn];
       });
       console.log(transaction, "transaction");
       try {
