@@ -2,19 +2,19 @@ import { lazy } from "react";
 import { AUTH_ROUTES, PROTECTED_ROUTES } from "./routePath";
 
 // Lazy load authentication pages
-const SignIn = lazy(() => import("@/pages/auth/sign-in"));
-const SignUp = lazy(() => import("@/pages/auth/sign-up"));
+const SignIn = lazy(() => import("@/pages/auth/sign-in.tsx"));
+const SignUp = lazy(() => import("@/pages/auth/sign-up.tsx"));
 
 // Lazy load protected pages
-const Dashboard = lazy(() => import("@/pages/dashboard/index"));
-const Transactions = lazy(() => import("@/pages/transactions/index"));
-const Reports = lazy(() => import("@/pages/reports/index"));
-const Settings = lazy(() => import("@/pages/settings/index"));
+const Dashboard = lazy(() => import("@/pages/dashboard/index.tsx"));
+const Transactions = lazy(() => import("@/pages/transactions/index.tsx"));
+const Reports = lazy(() => import("@/pages/reports/index.tsx"));
+const Settings = lazy(() => import("@/pages/settings/index.tsx"));
 
 // Lazy load settings sub-pages
-const Account = lazy(() => import("@/pages/settings/account"));
-const Appearance = lazy(() => import("@/pages/settings/appearance"));
-const Billing = lazy(() => import("@/pages/settings/billing"));
+const Account = lazy(() => import("@/pages/settings/account.tsx"));
+const Appearance = lazy(() => import("@/pages/settings/appearance.tsx"));
+const Billing = lazy(() => import("@/pages/settings/billing.tsx"));
 
 export const authenticationRoutePaths = [
   { path: AUTH_ROUTES.SIGN_IN, element: <SignIn /> },
