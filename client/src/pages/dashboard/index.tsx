@@ -1,11 +1,10 @@
 import PageLayout from "@/components/page-layout";
-import DashboardDataChart from "./dashboard-data-chart";
 import DashboardSummary from "./dashboard-summary";
+import { LazyDashboardDataChart, LazyExpensePieChart } from "./lazy-charts";
 //import ExpenseBreakDown from "./expense-breakdown";
 import { DateRangeType } from "@/components/date-range-select";
 import { useState } from "react";
 import DashboardRecentTransactions from "./dashboard-recent-transactions";
-import ExpensePieChart from "./expense-pie-chart";
 
 const Dashboard = () => {
   const [dateRange, _setDateRange] = useState<DateRangeType>(null);
@@ -25,10 +24,10 @@ const Dashboard = () => {
         {/* Dashboard Main Section */}
         <div className="w-full grid grid-cols-1 lg:grid-cols-6 gap-8">
           <div className="lg:col-span-4">
-            <DashboardDataChart dateRange={dateRange} />
+            <LazyDashboardDataChart dateRange={dateRange} />
           </div>
           <div className="lg:col-span-2">
-            <ExpensePieChart dateRange={dateRange} />
+            <LazyExpensePieChart dateRange={dateRange} />
           </div>
         </div>
         {/* Dashboard Recent Transactions */}
