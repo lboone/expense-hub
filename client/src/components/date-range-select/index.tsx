@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Popover,
   PopoverContent,
@@ -14,7 +15,7 @@ import {
   subMonths,
   subYears,
 } from "date-fns";
-import { ChevronDownIcon } from "lucide-react";
+import { CalendarIcon, ChevronDownIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export const DateRangeEnum = {
@@ -124,6 +125,16 @@ const presets: DateRangePreset[] = [
       label: "across All Time",
     }),
   },
+  {
+    label: "Custom Range",
+    value: DateRangeEnum.CUSTOM,
+    getRange: () => ({
+      from: null,
+      to: null,
+      value: DateRangeEnum.CUSTOM,
+      label: "for Custom Range",
+    }),
+  },
 ];
 
 export const DateRangeSelect = ({
@@ -132,14 +143,20 @@ export const DateRangeSelect = ({
   defaultRange = DateRangeEnum.LAST_30_DAYS,
 }: DateRangeSelectProps) => {
   const [open, setOpen] = useState(false);
+  const [showCustomPicker, setShowCustomPicker] = useState(false);
+  const [customFromDate, setCustomFromDate] = useState<Date | undefined>();
+  const [customToDate, setCustomToDate] = useState<Date | undefined>();
 
   const displayText = dateRange
-    ? presets.find((p) => p.value === dateRange.value)?.label ||
-      (dateRange.from
-        ? `${format(dateRange.from, "MMM dd, y")} - ${
-            dateRange.to ? format(dateRange.to, "MMM dd, y") : "Present"
-          }`
-        : "Select a duration")
+    ? dateRange.value === DateRangeEnum.CUSTOM && dateRange.from
+      ? dateRange.to
+        ? `${format(dateRange.from, "MMM dd, y")} - ${format(
+            dateRange.to,
+            "MMM dd, y"
+          )}`
+        : `${format(dateRange.from, "MMM dd, y")} - Present`
+      : presets.find((p) => p.value === dateRange.value)?.label ||
+        "Select a duration"
     : "Select a duration";
 
   // Set default range on initial render
@@ -153,40 +170,174 @@ export const DateRangeSelect = ({
     }
   }, [dateRange, defaultRange, setDateRange]);
 
+  // Reset custom date picker when switching away from custom range
+  useEffect(() => {
+    if (dateRange?.value !== DateRangeEnum.CUSTOM) {
+      setShowCustomPicker(false);
+      setCustomFromDate(undefined);
+      setCustomToDate(undefined);
+    } else if (
+      dateRange?.value === DateRangeEnum.CUSTOM &&
+      dateRange.from &&
+      dateRange.to
+    ) {
+      setCustomFromDate(dateRange.from);
+      setCustomToDate(dateRange.to);
+    }
+  }, [dateRange]);
+
+  const handlePresetClick = (preset: DateRangePreset) => {
+    if (preset.value === DateRangeEnum.CUSTOM) {
+      setShowCustomPicker(true);
+      // Don't close the popover for custom range
+    } else {
+      setDateRange(preset.getRange());
+      setOpen(false);
+    }
+  };
+
+  const handleCustomDateApply = () => {
+    if (customFromDate) {
+      const toDate = customToDate || endOfDay(new Date());
+      const customRange: DateRangeType = {
+        from: customFromDate,
+        to: toDate,
+        value: DateRangeEnum.CUSTOM,
+        label: customToDate
+          ? `from ${format(customFromDate, "MMM dd, y")} to ${format(
+              customToDate,
+              "MMM dd, y"
+            )}`
+          : `from ${format(customFromDate, "MMM dd, y")} to Present`,
+      };
+      setDateRange(customRange);
+      setShowCustomPicker(false);
+      setOpen(false);
+    }
+  };
+
+  const handleCustomDateCancel = () => {
+    setShowCustomPicker(false);
+    setCustomFromDate(undefined);
+    setCustomToDate(undefined);
+    // If there's no existing custom range, go back to the previous selection
+    if (!dateRange || dateRange.value === DateRangeEnum.CUSTOM) {
+      const defaultPreset = presets.find(
+        (p) => p.value === DateRangeEnum.LAST_30_DAYS
+      );
+      if (defaultPreset) {
+        setDateRange(defaultPreset.getRange());
+      }
+    }
+  };
+
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
         <Button
           variant="outline"
           className={cn(
-            `w-[200px] flex items-center justify-between text-left font-normal !bg-[var(--secondary-dark-color)]
+            `min-w-[200px] max-w-[280px] flex items-center justify-between text-left font-normal !bg-[var(--secondary-dark-color)]
             border-gray-700 !text-white !cursor-pointer`,
             !dateRange && "text-muted-foreground"
           )}
         >
-          {displayText}
-          <ChevronDownIcon className="ml-2 h-4 w-4 opacity-50" />
+          <span className="truncate mr-2">{displayText}</span>
+          <ChevronDownIcon className="h-4 w-4 opacity-50 flex-shrink-0" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-auto p-0" align="start">
-        <div className="grid py-1">
-          {presets.map((preset) => (
-            <Button
-              key={preset.value}
-              variant="ghost"
-              className={cn(
-                "justify-start text-left",
-                dateRange?.value === preset.value && "bg-accent"
-              )}
-              onClick={() => {
-                setDateRange(preset.getRange());
-                setOpen(false);
-              }}
-            >
-              {preset.label}
-            </Button>
-          ))}
-        </div>
+      <PopoverContent
+        className={cn("p-0", showCustomPicker ? "w-auto" : "w-auto")}
+        align="start"
+      >
+        {!showCustomPicker ? (
+          // Preset options
+          <div className="grid py-1">
+            {presets.map((preset) => (
+              <Button
+                key={preset.value}
+                variant="ghost"
+                className={cn(
+                  "justify-start text-left",
+                  dateRange?.value === preset.value && "bg-accent"
+                )}
+                onClick={() => handlePresetClick(preset)}
+              >
+                {preset.label}
+              </Button>
+            ))}
+          </div>
+        ) : (
+          // Custom date picker
+          <div className="p-4 space-y-4">
+            <div className="flex items-center justify-between mb-3">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowCustomPicker(false)}
+                className="h-7 px-2"
+              >
+                ← Back
+              </Button>
+              <div className="text-sm font-medium">
+                Select Custom Date Range
+              </div>
+              <div className="w-12" /> {/* Spacer for alignment */}
+            </div>
+
+            {/* From Date */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">From Date</label>
+              <Calendar
+                mode="single"
+                selected={customFromDate}
+                onSelect={setCustomFromDate}
+                disabled={(date) => date > new Date()}
+                initialFocus
+                className="rounded-md border"
+              />
+            </div>
+
+            {/* To Date */}
+            <div className="space-y-2">
+              <label className="text-sm font-medium">To Date (Optional)</label>
+              <Calendar
+                mode="single"
+                selected={customToDate}
+                onSelect={setCustomToDate}
+                disabled={(date) =>
+                  date > new Date() ||
+                  (customFromDate ? date < customFromDate : false)
+                }
+                className="rounded-md border"
+              />
+              <p className="text-xs text-muted-foreground">
+                Leave empty to use current date
+              </p>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-2 pt-2">
+              <Button
+                size="sm"
+                onClick={handleCustomDateApply}
+                disabled={!customFromDate}
+                className="flex-1"
+              >
+                <CalendarIcon className="h-4 w-4 mr-1" />
+                Apply
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleCustomDateCancel}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+            </div>
+          </div>
+        )}
       </PopoverContent>
     </Popover>
   );
