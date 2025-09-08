@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import ConfirmationDialog from "@/components/ui/confirmation-dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +31,7 @@ import {
   //StopCircleIcon,
   Trash2,
 } from "lucide-react";
+import { useState } from "react";
 import { toast } from "sonner";
 
 type FrequencyInfo = {
@@ -243,91 +245,136 @@ export const transactionColumns: ColumnDef<TransactionType>[] = [
 const ActionsCell = ({ row }: { row: any }) => {
   //const isRecurring = row.original.isRecurring;
   const transactionId = row.original.id;
+  const transactionTitle = row.original.title;
   const { onOpenDrawer } = useEditTransactionDrawer();
   const [duplicateTransaction, { isLoading: isDuplicating }] =
     useDuplicateTransactionMutation();
   const [deleteTransaction, { isLoading: isDeleting }] =
     useDeleteTransactionMutation();
 
-  const handleDuplicate = (e: Event) => {
-    e.preventDefault();
+  // Confirmation dialog states
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
+
+  const handleDuplicate = () => {
     if (isDuplicating) return;
     duplicateTransaction(transactionId)
       .unwrap()
       .then(() => {
         toast.success("Transaction duplicated successfully");
+        setShowDuplicateDialog(false);
       })
       .catch((error) => {
         toast.error(error.data?.message || "Failed to duplicate transaction");
+        setShowDuplicateDialog(false);
       });
   };
 
-  const handleDelete = (e: Event) => {
-    e.preventDefault();
+  const handleDelete = () => {
     if (isDeleting) return;
     deleteTransaction(transactionId)
       .unwrap()
       .then(() => {
         toast.success("Transaction deleted successfully");
+        setShowDeleteDialog(false);
       })
       .catch((error) => {
         toast.error(error.data?.message || "Failed to delete transaction");
+        setShowDeleteDialog(false);
       });
   };
 
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="h-8 w-8 p-0">
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent
-        className="w-44"
-        align="end"
-        onCloseAutoFocus={(e) => {
-          if (isDeleting || isDuplicating) {
-            e.preventDefault();
-          }
-        }}
-      >
-        <DropdownMenuItem onClick={() => onOpenDrawer(transactionId)}>
-          <Pencil className="mr-1 h-4 w-4" />
-          Edit
-        </DropdownMenuItem>
-        <DropdownMenuItem
-          className="relative"
-          disabled={isDuplicating}
-          onSelect={handleDuplicate}
-        >
-          <Copy className="mr-1 h-4 w-4" />
-          Duplicate
-          {isDuplicating && (
-            <Loader className="ml-1 h-4 w-4 absolute right-2 animate-spin" />
-          )}
-        </DropdownMenuItem>
+  const handleDuplicateClick = (e: Event) => {
+    e.preventDefault();
+    setShowDuplicateDialog(true);
+  };
 
-        {/* {isRecurring && (
-          <>
-            <DropdownMenuItem>
-              <StopCircleIcon className="mr-1 h-4 w-4" />
-              Stop Recurring
-            </DropdownMenuItem>
-          </>
-        )} */}
-        <DropdownMenuSeparator />
-        <DropdownMenuItem
-          className="relative !text-destructive"
-          disabled={isDeleting}
-          onSelect={handleDelete}
+  const handleDeleteClick = (e: Event) => {
+    e.preventDefault();
+    setShowDeleteDialog(true);
+  };
+
+  return (
+    <>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" className="h-8 w-8 p-0">
+            <MoreHorizontal className="h-4 w-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent
+          className="w-44"
+          align="end"
+          onCloseAutoFocus={(e) => {
+            if (isDeleting || isDuplicating) {
+              e.preventDefault();
+            }
+          }}
         >
-          <Trash2 className="mr-1 h-4 w-4 !text-destructive" />
-          Delete
-          {isDeleting && (
-            <Loader className="ml-1 h-4 w-4 absolute right-2 animate-spin" />
-          )}
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
+          <DropdownMenuItem onClick={() => onOpenDrawer(transactionId)}>
+            <Pencil className="mr-1 h-4 w-4" />
+            Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            className="relative"
+            disabled={isDuplicating}
+            onSelect={handleDuplicateClick}
+          >
+            <Copy className="mr-1 h-4 w-4" />
+            Duplicate
+            {isDuplicating && (
+              <Loader className="ml-1 h-4 w-4 absolute right-2 animate-spin" />
+            )}
+          </DropdownMenuItem>
+
+          {/* {isRecurring && (
+            <>
+              <DropdownMenuItem>
+                <StopCircleIcon className="mr-1 h-4 w-4" />
+                Stop Recurring
+              </DropdownMenuItem>
+            </>
+          )} */}
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            className="relative !text-destructive"
+            disabled={isDeleting}
+            onSelect={handleDeleteClick}
+          >
+            <Trash2 className="mr-1 h-4 w-4 !text-destructive" />
+            Delete
+            {isDeleting && (
+              <Loader className="ml-1 h-4 w-4 absolute right-2 animate-spin" />
+            )}
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showDeleteDialog}
+        setIsOpen={setShowDeleteDialog}
+        title="Are you sure you want to delete this transaction?"
+        description={`This will permanently delete the transaction "${transactionTitle}". This action cannot be undone.`}
+        onConfirm={handleDelete}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isLoading={isDeleting}
+        variant="destructive"
+      />
+
+      {/* Duplicate Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showDuplicateDialog}
+        setIsOpen={setShowDuplicateDialog}
+        title="Are you sure you want to duplicate this transaction?"
+        description={`This will create a copy of the transaction "${transactionTitle}" with the title prefixed as "Duplicate".`}
+        onConfirm={handleDuplicate}
+        confirmText="Duplicate"
+        cancelText="Cancel"
+        isLoading={isDuplicating}
+        variant="default"
+      />
+    </>
   );
 };

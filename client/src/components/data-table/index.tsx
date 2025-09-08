@@ -1,20 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import * as React from "react";
-import {
-  ColumnDef,
-  getCoreRowModel,
-  getFilteredRowModel,
-  //getPaginationRowModel,
-  getSortedRowModel,
-  useReactTable,
-  flexRender,
-  SortingState,
-  VisibilityState,
-  ColumnFiltersState,
-} from "@tanstack/react-table";
-import { Loader, PlusCircleIcon, Trash, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -23,17 +16,24 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { cn } from "@/lib/utils";
-import TableSkeleton from "./table-skeleton-loader";
-import { DataTablePagination } from "./table-pagination";
+import {
+  ColumnDef,
+  ColumnFiltersState,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  //getPaginationRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+  VisibilityState,
+} from "@tanstack/react-table";
+import { Loader, PlusCircleIcon, Trash, X } from "lucide-react";
+import * as React from "react";
 import { EmptyState } from "../empty-state";
+import { DataTablePagination } from "./table-pagination";
+import TableSkeleton from "./table-skeleton-loader";
 
 interface FilterOption {
   key: string;
@@ -111,9 +111,6 @@ export function DataTable<TData>({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
-    // getPaginationRowModel: isShowPagination
-    // ? getPaginationRowModel()
-    // : undefined,
   });
 
   const selectedRows = table.getFilteredSelectedRowModel().rows;

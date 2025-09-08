@@ -1,6 +1,7 @@
-import * as React from "react";
-import { Label, Pie, PieChart, Cell } from "recharts";
+import { Cell, Label, Pie, PieChart } from "recharts";
 
+import { DateRangeType } from "@/components/date-range-select";
+import { EmptyState } from "@/components/empty-state";
 import {
   Card,
   CardContent,
@@ -15,11 +16,10 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "@/components/ui/chart";
-import { DateRangeType } from "@/components/date-range-select";
-import { formatCurrency } from "@/lib/format-currency";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useExpensePieChartBreakdownQuery } from "@/features/analytics/analyticsAPI";
+import { formatCurrency } from "@/lib/format-currency";
 import { formatPercentage } from "@/lib/format-percentage";
-import { EmptyState } from "@/components/empty-state";
 
 interface Category {
   name: string;
@@ -62,26 +62,14 @@ const chartConfig = {
 const ExpensePieChart = (props: { dateRange?: DateRangeType }) => {
   const { dateRange } = props;
 
-  // const { data, isFetching } = useExpensePieChartBreakdownQuery({
-  //   preset: dateRange?.value,
-  // });
-  // const categories = data?.data?.breakdown || [];
-  // const totalSpent = data?.data?.totalSpent || 0;
+  const { data, isFetching } = useExpensePieChartBreakdownQuery({
+    preset: dateRange?.value,
+  });
 
-  const isFetching = false;
+  const _data = data?.data?.pieChartData;
 
-  const totalSpent = React.useMemo(() => {
-    return _categories.reduce((sum, category) => sum + category.amount, 0);
-  }, []);
-
-  // Format data for pie chart
-  const categories = React.useMemo(() => {
-    return _categories.map((category) => ({
-      name: category.name,
-      value: category.amount,
-      percentage: Math.round((category.amount / totalSpent) * 100),
-    }));
-  }, [totalSpent]);
+  const categories = _data?.breakdown || [];
+  const totalSpent = _data?.totalSpent || 0;
 
   if (isFetching) {
     return <PieChartSkeleton />;

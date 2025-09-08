@@ -1,4 +1,5 @@
 import { DataTable } from "@/components/data-table";
+import ConfirmationDialog from "@/components/ui/confirmation-dialog";
 import { _TRANSACTION_TYPE, _TransactionType } from "@/constant";
 import {
   useBulkDeleteTransactionMutation,
@@ -26,6 +27,11 @@ const TransactionTable = (props: {
     pageNumber: 1,
     pageSize: props.pageSize || 10,
   });
+
+  const [showBulkDeleteDialog, setShowBulkDeleteDialog] = useState(false);
+  const [pendingBulkDeleteIds, setPendingBulkDeleteIds] = useState<string[]>(
+    []
+  );
 
   const { debouncedTerm, setSearchTerm } = useDebouncedSearch("", {
     delay: 500,
@@ -80,12 +86,19 @@ const TransactionTable = (props: {
   };
 
   const handleBulkDelete = (transactionIds: string[]) => {
-    console.log(transactionIds);
+    setPendingBulkDeleteIds(transactionIds);
+    setShowBulkDeleteDialog(true);
+  };
 
-    bulkDeleteTransaction(transactionIds)
+  const executeBulkDelete = () => {
+    bulkDeleteTransaction(pendingBulkDeleteIds)
       .unwrap()
       .then(() => {
-        toast.success("Transactions deleted successfully");
+        toast.success(
+          `${pendingBulkDeleteIds.length} transactions deleted successfully`
+        );
+        setShowBulkDeleteDialog(false);
+        setPendingBulkDeleteIds([]);
       })
       .catch((error) => {
         toast.error(error.data?.message || "Failed to delete transactions");
@@ -93,38 +106,57 @@ const TransactionTable = (props: {
   };
 
   return (
-    <DataTable
-      data={transactions} //transactions
-      columns={transactionColumns}
-      searchPlaceholder="Search transactions..."
-      isLoading={isFetching}
-      isBulkDeleting={isBulkDeleting}
-      isShowPagination={props.isShowPagination}
-      pagination={pagination}
-      filters={[
-        {
-          key: "type",
-          label: "All Types",
-          options: [
-            { value: _TRANSACTION_TYPE.INCOME, label: "Income" },
-            { value: _TRANSACTION_TYPE.EXPENSE, label: "Expense" },
-          ],
-        },
-        {
-          key: "frequently",
-          label: "Frequently",
-          options: [
-            { value: "RECURRING", label: "Recurring" },
-            { value: "NON_RECURRING", label: "Non-Recurring" },
-          ],
-        },
-      ]}
-      onSearch={handleSearch}
-      onPageChange={(pageNumber) => handlePageChange(pageNumber)}
-      onPageSizeChange={(pageSize) => handlePageSizeChange(pageSize)}
-      onFilterChange={(filters) => handleFilterChange(filters)}
-      onBulkDelete={handleBulkDelete}
-    />
+    <>
+      <DataTable
+        data={transactions} //transactions
+        columns={transactionColumns}
+        searchPlaceholder="Search transactions..."
+        isLoading={isFetching}
+        isBulkDeleting={isBulkDeleting}
+        isShowPagination={props.isShowPagination}
+        pagination={pagination}
+        filters={[
+          {
+            key: "type",
+            label: "All Types",
+            options: [
+              { value: _TRANSACTION_TYPE.INCOME, label: "Income" },
+              { value: _TRANSACTION_TYPE.EXPENSE, label: "Expense" },
+            ],
+          },
+          {
+            key: "frequently",
+            label: "Frequently",
+            options: [
+              { value: "RECURRING", label: "Recurring" },
+              { value: "NON_RECURRING", label: "Non-Recurring" },
+            ],
+          },
+        ]}
+        onSearch={handleSearch}
+        onPageChange={(pageNumber) => handlePageChange(pageNumber)}
+        onPageSizeChange={(pageSize) => handlePageSizeChange(pageSize)}
+        onFilterChange={(filters) => handleFilterChange(filters)}
+        onBulkDelete={handleBulkDelete}
+      />
+
+      {/* Bulk Delete Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showBulkDeleteDialog}
+        setIsOpen={setShowBulkDeleteDialog}
+        title="Are you sure you want to delete these transactions?"
+        description={`This will permanently delete ${
+          pendingBulkDeleteIds.length
+        } selected transaction${
+          pendingBulkDeleteIds.length !== 1 ? "s" : ""
+        }. This action cannot be undone.`}
+        onConfirm={executeBulkDelete}
+        confirmText="Delete"
+        cancelText="Cancel"
+        isLoading={isBulkDeleting}
+        variant="destructive"
+      />
+    </>
   );
 };
 export default TransactionTable;

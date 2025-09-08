@@ -1,12 +1,3 @@
-import { useEffect, useState } from "react";
-import {
-  format,
-  subDays,
-  subMonths,
-  subYears,
-  startOfMonth,
-  startOfYear,
-} from "date-fns";
 import { Button } from "@/components/ui/button";
 import {
   Popover,
@@ -14,20 +5,31 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import {
+  endOfDay,
+  format,
+  startOfMonth,
+  startOfYear,
+  subDays,
+  subMonths,
+  subYears,
+} from "date-fns";
 import { ChevronDownIcon } from "lucide-react";
+import { useEffect, useState } from "react";
 
 export const DateRangeEnum = {
-  LAST_30_DAYS : "30days",
-  LAST_MONTH : "lastMonth",
-  LAST_3_MONTHS : "last3Months",
-  LAST_YEAR : "lastYear",
-  THIS_MONTH : "thisMonth",
-  THIS_YEAR : "thisYear",
-  ALL_TIME : "allTime",
-  CUSTOM : "custom"
+  LAST_30_DAYS: "30days",
+  LAST_MONTH: "lastMonth",
+  LAST_3_MONTHS: "last3Months",
+  LAST_YEAR: "lastYear",
+  THIS_MONTH: "thisMonth",
+  THIS_YEAR: "thisYear",
+  ALL_TIME: "allTime",
+  CUSTOM: "custom",
 } as const;
 
-export type DateRangeEnumType = (typeof DateRangeEnum)[keyof typeof DateRangeEnum];
+export type DateRangeEnumType =
+  (typeof DateRangeEnum)[keyof typeof DateRangeEnum];
 
 export type DateRangeType = {
   from: Date | null;
@@ -48,16 +50,16 @@ interface DateRangeSelectProps {
   defaultRange?: DateRangeEnumType;
 }
 
-const today = new Date();
-const yesterday = subDays(today, 1);
+const now = new Date();
+const today = endOfDay(now);
 
 const presets: DateRangePreset[] = [
   {
     label: "Last 30 Days",
     value: DateRangeEnum.LAST_30_DAYS,
     getRange: () => ({
-      from: subDays(yesterday, 29),
-      to: yesterday,
+      from: subDays(today, 29),
+      to: today,
       value: DateRangeEnum.LAST_30_DAYS,
       label: "for Past 30 Days",
     }),
@@ -110,7 +112,6 @@ const presets: DateRangePreset[] = [
       to: today,
       value: DateRangeEnum.THIS_YEAR,
       label: "for This Year",
-
     }),
   },
   {
@@ -141,10 +142,10 @@ export const DateRangeSelect = ({
         : "Select a duration")
     : "Select a duration";
 
-      // Set default range on initial render
+  // Set default range on initial render
   useEffect(() => {
     if (!dateRange) {
-      const defaultPreset = presets.find(p => p.value === defaultRange);
+      const defaultPreset = presets.find((p) => p.value === defaultRange);
       if (defaultPreset) {
         // console.log(defaultPreset.getRange(),"defaultPreset.getRange()")
         setDateRange(defaultPreset.getRange());
