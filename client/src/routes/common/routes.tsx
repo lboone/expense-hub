@@ -6,10 +6,10 @@ const SignIn = lazy(() => import("@/pages/auth/sign-in"));
 const SignUp = lazy(() => import("@/pages/auth/sign-up"));
 
 // Lazy load protected pages
-const Dashboard = lazy(() => import("@/pages/dashboard"));
-const Transactions = lazy(() => import("@/pages/transactions"));
-const Reports = lazy(() => import("@/pages/reports"));
-const Settings = lazy(() => import("@/pages/settings"));
+const Dashboard = lazy(() => import("@/pages/dashboard/index"));
+const Transactions = lazy(() => import("@/pages/transactions/index"));
+const Reports = lazy(() => import("@/pages/reports/index"));
+const Settings = lazy(() => import("@/pages/settings/index"));
 
 // Lazy load settings sub-pages
 const Account = lazy(() => import("@/pages/settings/account"));
